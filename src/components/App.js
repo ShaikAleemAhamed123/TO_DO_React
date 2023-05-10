@@ -25,14 +25,22 @@ function App() {
 
     if (updatedTask.done) {
       updatedTask.checked = true;
-      setCompletedTasks((completedTasks) => [...completedTasks, updatedTask]);
-      setPendingTasks((pendingTasks) => pendingTasks.filter((t) => t.id !== updatedTask.id));
+      setPendingTasks((pendingTasks) => pendingTasks.map((t) => t.id === updatedTask.id ? updatedTask : t));
+      setTimeout(() => {
+        setCompletedTasks((completedTasks) => [...completedTasks, updatedTask]);
+        setPendingTasks((pendingTasks) => pendingTasks.filter((t) => t.id !== updatedTask.id));
+      }, 350);
+
       console.log(completedTasks);
       console.log(pendingTasks);
     } else {
       updatedTask.checked = false;
-      setPendingTasks((pendingTasks) => [...pendingTasks, updatedTask])
-      setCompletedTasks((completedTasks) => completedTasks.filter((t) => t.id !== updatedTask.id));
+      setCompletedTasks((completedTasks) => completedTasks.map((t) => t.id === updatedTask.id ? updatedTask : t));
+      setTimeout(() => {
+        setPendingTasks((pendingTasks) => [...pendingTasks, updatedTask]);
+        setCompletedTasks((completedTasks) => completedTasks.filter((t) => t.id !== updatedTask.id));
+      }, 350);
+
       console.log(completedTasks);
       console.log(pendingTasks);
     }
@@ -74,7 +82,7 @@ function App() {
       <div className="ms-5">
         <h2 style={{ textDecoration: "underline" }}>{filter === "completed" ? "Completed Tasks" : "Pending Tasks"}</h2>
 
-        {display}
+        {display.length === 0 ? <h4>No Tasks Here Yet !</h4> : display}
       </div>
 
 
