@@ -1,24 +1,47 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Form from './Form';
 import Task from './Task';
 import Filters from './Filters';
+
 function App() {
 
 
 
-  const [filter, setFilter] = useState("None");
+  const [filter, setFilter] = useState('None');
   const [pendingTasks, setPendingTasks] = useState([]);
   const [completedTasks, setCompletedTasks] = useState([]);
 
-  function filterHandler(e) {
-    if (filter === "completed") setFilter("None");
-    else setFilter("completed");
-  }
 
+  useEffect(() => {
+    const storedPendingTasks = JSON.parse(localStorage.getItem('pendingTasks')) || [];
+    const storedCompletedTasks = JSON.parse(localStorage.getItem('completedTasks')) || [];
+    setPendingTasks(prevPendingTasks => [...prevPendingTasks, ...storedPendingTasks]);
+    setCompletedTasks(prevCompletedTasks => [...prevCompletedTasks, ...storedCompletedTasks]);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('pendingTasks', JSON.stringify(pendingTasks));
+  }, [pendingTasks]);
+
+  useEffect(() => {
+    localStorage.setItem('completedTasks', JSON.stringify(completedTasks));
+  }, [completedTasks]);
+
+  function filterHandler() {
+    setFilter(filter === 'completed' ? 'None' : 'completed');
+  }
 
   function addTask(task) {
-    setPendingTasks((prevTasks) => [...prevTasks, { id: Date.now(), text: task, checked: false, done: false }]);
+    const newTask = {
+      id: Date.now(),
+      text: task,
+      checked: false,
+      key: Date.now(),
+      done: false
+    };
+    setPendingTasks(prevTasks => [...prevTasks, newTask]);
   }
+
 
   function checkHandler(task) {
     const updatedTask = { ...task, done: !task.done };
@@ -29,26 +52,23 @@ function App() {
       setTimeout(() => {
         setCompletedTasks((completedTasks) => [...completedTasks, updatedTask]);
         setPendingTasks((pendingTasks) => pendingTasks.filter((t) => t.id !== updatedTask.id));
-      }, 350);
 
-      console.log(completedTasks);
-      console.log(pendingTasks);
-    } else {
+
+      }, 350);
+    }
+    else {
       updatedTask.checked = false;
       setCompletedTasks((completedTasks) => completedTasks.map((t) => t.id === updatedTask.id ? updatedTask : t));
       setTimeout(() => {
         setPendingTasks((pendingTasks) => [...pendingTasks, updatedTask]);
         setCompletedTasks((completedTasks) => completedTasks.filter((t) => t.id !== updatedTask.id));
-      }, 350);
-
-      console.log(completedTasks);
-      console.log(pendingTasks);
+      }
+        , 350);
     }
+
   }
 
-
-
-  let pendingRend = pendingTasks.map((task) => (
+  const pendingRend = pendingTasks.map(task => (
     <Task
       name={task.text}
       id={task.id}
@@ -57,7 +77,7 @@ function App() {
       onCheck={() => checkHandler(task)}
     />
   ));
-  let completedRend = completedTasks.map((task) => (
+  const completedRend = completedTasks.map(task => (
     <Task
       name={task.text}
       id={task.id}
@@ -66,27 +86,25 @@ function App() {
       onCheck={() => checkHandler(task)}
     />
   ));
-  let display = [];
-  if (filter === "completed") {
-    display = completedRend;
+  const display = filter === 'completed' ? completedRend : pendingRend;
+  const sessionHandler = () => {
+    localStorage.clear();
+    window.location.reload();
   }
-  else {
-    display = pendingRend;
-  }
+
   return (
     <div>
       <h1>TO DO List</h1>
-      <Form onAddTask={addTask} />
+      <Form onAddTask={addTask} clearSession={sessionHandler} />
       <Filters filterHandler={filterHandler} />
 
       <div className="ms-5">
-        <h2 style={{ textDecoration: "underline" }}>{filter === "completed" ? "Completed Tasks" : "Pending Tasks"}</h2>
+        <h2 style={{ textDecoration: 'underline' }}>
+          {filter === 'completed' ? 'Completed Tasks' : 'Pending Tasks'}
+        </h2>
 
         {display.length === 0 ? <h4>No Tasks Here Yet !</h4> : display}
       </div>
-
-
-
     </div>
   );
 }
